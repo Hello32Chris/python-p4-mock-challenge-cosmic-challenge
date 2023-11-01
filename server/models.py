@@ -20,15 +20,17 @@ db = SQLAlchemy(metadata=metadata)
 class Planet(db.Model, SerializerMixin):
     __tablename__ = 'planets'
 
+    serialize_rules=('-missions.planet', )
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     distance_from_earth = db.Column(db.Integer)
     nearest_star = db.Column(db.String)
 
-    # Add relationship
+    # Add relationship 
+    missions = db.relationship('Mission', back_populates= ('planet'))
 
     # Add serialization rules
-
 
 class Scientist(db.Model, SerializerMixin):
     __tablename__ = 'scientists'
@@ -38,23 +40,64 @@ class Scientist(db.Model, SerializerMixin):
     field_of_study = db.Column(db.String)
 
     # Add relationship
+    missions = db.relationship('Mission', back_populates=('scientist'))
 
     # Add serialization rules
+    serialize_rules=('-missions.scientist', )
 
     # Add validation
-
+    @validates('name')
+    def validates_name(self,key, name):
+        if name:
+            return name
+        else:
+            raise ValueError('fuck youuuuuuuuu')
+        
+    @validates('field_of_study')
+    def validates_field_of_study(self, key, field_of_study):
+        if field_of_study:
+            return field_of_study
+        else:
+            raise ValueError('fuck youuuuuuuuu')
+    
 
 class Mission(db.Model, SerializerMixin):
     __tablename__ = 'missions'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    
+    scientist_id = db.Column(db.Integer, db.ForeignKey('scientists.id'))
+    planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'))
 
     # Add relationships
+    planet = db.relationship('Planet', back_populates=('missions'))
+    scientist = db.relationship('Scientist', back_populates=('missions'))
 
     # Add serialization rules
-
+    serialize_rules=('-planet.missions', '-scientist.missions')
+    
     # Add validation
-
+    @validates('name')
+    def validates_name(self, key, name):
+        if name:
+            return name
+        else:
+            raise ValueError('fuck youuuuuuuuu')
+        
+    @validates('scientist_id')
+    def validates_scientist_id(self, key, scientist_id):
+        if scientist_id:
+            return scientist_id
+        else:
+            raise ValueError('fuck youuuuuuuuu')
+        
+    @validates('planet_id')
+    def validates_planet_id(self, key, planet_id):
+        if planet_id:
+            return planet_id
+        else:
+            raise ValueError('fuck youuuuuuuuu')
 
 # add any models you may need.
+
